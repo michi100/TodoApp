@@ -1,9 +1,11 @@
 import { useState, useRef } from "react"; // 変数の監視
 import TodoList from "./TodoList";
+import DeletedTodoList from "./DeletedTodoList";
 import { v4 as uuidv4 } from "uuid";
 
 function App() {
   const [todos, setTodos] = useState([]);
+  const [deletedTodos, setDeletedTodos] = useState([]);
   
   const todoNameRef = useRef();
 
@@ -12,7 +14,7 @@ function App() {
     const name = todoNameRef.current.value;
     if(name === "") return;
     setTodos((prevTodos) => {
-      return [...prevTodos, {id: uuidv4(), name: name, completed: false}]
+      return [{id: uuidv4(), name: name, completed: false}, ...prevTodos]
     });
     todoNameRef.current.value = null;
   };
@@ -24,18 +26,30 @@ function App() {
     setTodos(newTodos);
   };
 
+  // const handleClear = () => {
+  //   const newTodos = todos.filter((todo) => !todo.completed);
+  //   setTodos(newTodos);
+  // };
   const handleClear = () => {
-    const newTodos = todos.filter((todo) => !todo.completed);
+    const newTodos = todos.filter((todo) => {
+      if (todo.completed) {
+        setDeletedTodos((prevDeletedTodos) => [todo, ...prevDeletedTodos]);
+      }
+      return !todo.completed;
+    });
     setTodos(newTodos);
-  }
+  };
 
   return(
     <>
-      <TodoList todos={todos} toggleTodo={toggleTodo} />
       <input type="text" ref={todoNameRef}/>
       <button onClick={handleAddTodo}>タスクを追加</button>
+      <TodoList todos={todos} toggleTodo={toggleTodo} />
       <button onClick={handleClear}>完了したタスクの削除</button>
-      <div>残りのタスク:{todos.filter((todo) => !todo.completed).length}</div>
+      <div>残りのタスク:{todos.length}</div>
+      <hr></hr>
+      <DeletedTodoList deletedTodos={deletedTodos} />
+      <div>削除されたタスク:{deletedTodos.length}</div>
     </>
   );
 }
